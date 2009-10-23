@@ -62,7 +62,7 @@ class GenomicInterval( TableRow ):
             self.strand = default_strand
         else:
             strand = fields[strand_col]
-            if strand not in ( "+", "-"):
+            if strand not in ( "+", "-", "."):
                 if fix_strand:
                     strand = "+"
                 else: raise StrandFormatError( "Strand must be either '+' or '-'" )
