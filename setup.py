@@ -18,7 +18,7 @@ except:
     have_numpy = False
        
 def main():
-    setup(  name = "bx-python",
+    setup(  name = "bx-omelogic",
             version = "0.5.0",
             py_modules = [ 'psyco_full' ],
             packages = find_packages( 'lib' ),
@@ -28,7 +28,7 @@ def main():
             ext_modules = get_extension_modules(),
             test_suite = 'nose.collector',
             setup_requires = ['nose>=0.10.4'],
-            author = "James Taylor, Bob Harris, David King, Brent Pedersen, and others",
+            author = "Ajish George, based on bx-python by James Taylor, Bob Harris, David King, Brent Pedersen, and others",
             author_email = "james@jamestaylor.org",
             description = "Tools for manipulating biological data, particularly multiple sequence alignments",
             url = "http://bx-python.trac.bx.psu.edu",
