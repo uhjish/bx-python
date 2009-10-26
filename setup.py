@@ -19,7 +19,7 @@ except:
        
 def main():
     setup(  name = "bx-omelogic",
-            version = "0.5.0",
+            version = "0.5.0.1",
             py_modules = [ 'psyco_full' ],
             packages = find_packages( 'lib' ),
             package_dir = { '': 'lib' },
