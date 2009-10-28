@@ -18,7 +18,7 @@ except:
     have_numpy = False
        
 def main():
-    setup(  name = "bx-omelogic",
+    setup(  name = "bx-python",
             version = "0.5.0.1",
             py_modules = [ 'psyco_full' ],
             packages = find_packages( 'lib' ),
