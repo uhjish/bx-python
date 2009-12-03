@@ -142,8 +142,11 @@ def getsignificance( qcounts, bgcounts, qsize, bgsize ):
         bgdict[ bct[0] ] = bct[1]
         
     for qct in qcounts:
-        bgct = bgdict[ qct[0] ]
-        pval = scipy.stats.binom_test( qct[1], qsize, float(bgct) / float(bgsize) )
+        try:
+            bgct = bgdict[ qct[0] ]
+            pval = scipy.stats.binom_test( qct[1], qsize, float(bgct) / float(bgsize) )
+        except:
+            pval= -1
         yield [ str(qct[0]), str(qct[1]), str(pval), str(bgct), str(qct[2]) ]
 
 class Significator(threading.Thread):
