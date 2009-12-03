@@ -105,7 +105,7 @@ def main():
     if ( options.background == None ):
         for counter in qcounters:
             for items in counter.getWords():
-                print "\t".join(items)
+                print wfilename + "\t" + "\t".join(items)
     else:
         sigcounters = []
         for idx in range(0,len(qcounters)):
