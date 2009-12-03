@@ -98,7 +98,8 @@ def main():
             bcounters.append(bcounts)
     
     qsize = countvalidlines(queryFile)
-    bsize = countvalidlines(options.background)
+    if (options.background != None):
+		bsize = countvalidlines(options.background)
     
 
     if ( options.background == None ):
