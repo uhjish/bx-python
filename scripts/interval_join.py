@@ -26,6 +26,12 @@ def main():
     usage = "usage: %prog [options] intervalFile1 intervalFile2"
 
     parser = OptionParser()
+    parser.add_option("-l", "--leftfill",
+                        action="store_true", dest="lfill", default=False,
+                        help="show non-intersecting loci from left file")
+    parser.add_option("-r", "--rightfill",
+                        action="store_true", dest="rfill", default=False,
+                        help="show non-intersecting loci from right file")
     parser.add_option("-f", "--fractional",
                         action="store_true", dest="fraction", default=False,
                         help="fractional intersections -- fraction of the smaller locus")
@@ -54,7 +60,7 @@ def main():
     set1 = bx.intervals.io.GenomicIntervalReader( open(args[0]) )
     set2 = bx.intervals.io.GenomicIntervalReader( open(args[1]) )
     
-    result = bx.intervals.operations.join.join(set1, set2, mincols=options.overlap, leftfill=False, rightfill=False, asfraction=options.fraction, matchStrand=options.strand, outColumns=columns)
+    result = bx.intervals.operations.join.join(set1, set2, mincols=options.overlap, leftfill=options.lfill, rightfill=options.rfill, asfraction=options.fraction, matchStrand=options.strand, outColumns=columns)
 
     for pair in result:
         print "\t".join(pair)

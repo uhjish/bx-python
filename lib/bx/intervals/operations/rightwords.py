@@ -5,12 +5,16 @@ start(arithmetically) and end(arithmetically).  This works by simply
 walking through the inputs in O(n) time.
 """
 
-import psyco_full
+try:
+    import psyco
+    psyco.full()
+except:
+    pass
 
 import math
 import re
 import shlex
-import scipy.stats
+import scipy.stats 
 import threading
 import traceback
 import fileinput
@@ -62,11 +66,12 @@ def getpairs(leftSet, rightSet, leftCol, mincols=1, asfraction=False, matchStran
                     else:
                         mincols = rightbases
                     mincols = math.floor(mincols * minoverlap)
-                if item.start in range(interval.start,interval.end+1) and item.end not in range(interval.start,interval.end+1):
+                    
+                if (item.start >= interval.start and item.start <= interval.end) and (item.end < interval.start or item.end > interval.end):
                     overlap = interval.end-item.start
-                elif item.end in range(interval.start,interval.end+1) and item.start not in range(interval.start,interval.end+1):
+                elif (item.end >= interval.start and item.end <= interval.end) and (item.start < interval.start or item.end > interval.end):
                     overlap = item.end-interval.start
-                elif item.start in range(interval.start,interval.end+1) and item.end in range(interval.start,interval.end+1):
+                elif item.start >= interval.start and item.start <= interval.end and item.end >= interval.start and item.end <= interval.end:
                     overlap = item.end-item.start
                 else:   #the intersecting item's start and end are outside the interval range
                     overlap = interval.end-interval.start
@@ -122,17 +127,18 @@ def getcounts( pairs, showMembers=False ):
         try:
             counts[ pair[0] ] += 1
             if showMembers:
-                words[ pair[0] ].write(pair[1])
-                words[ pair[0] ].write(",")
+                words[ pair[0] ].append(str(pair[1]))
         except KeyError:
             counts[ pair[0] ]= 1
+        
             if showMembers:
-                words[ pair[0] ] = StringIO()
-                words[ pair[0] ].write(pair[1])
-                words[ pair[0] ].write(",")
+                words[ pair[0] ] = list()
+                words[ pair[0]].append(str(pair[1]))
     for word, count in counts.iteritems():
         if showMembers:
-            yield [word, str(count), words[ word ].getvalue()]
+            wlist = sorted(words[word])
+            wordStr = ','.join(wlist)
+            yield [word, str(count), wordStr]
         else:
             yield [word, str(count)]
 
@@ -142,11 +148,14 @@ def getsignificance( qcounts, bgcounts, qsize, bgsize ):
         bgdict[ bct[0] ] = bct[1]
         
     for qct in qcounts:
+        bgct=0
         try:
             bgct = bgdict[ qct[0] ]
-            pval = scipy.stats.binom_test( qct[1], qsize, float(bgct) / float(bgsize) )
+            pval = scipy.stats.binom.sf( int(qct[1]), int(qsize), float(bgct)/float(bgsize) ) 
         except:
-            pval= -1
+            #pval=-1
+            print "qct: %d, bgct: %d, bgsize: %d, qsize: %d" % ( int(qct[1]), int(bgct), int(bgsize), int(qsize)) 
+            raise
         yield [ str(qct[0]), str(qct[1]), str(pval), str(bgct), str(qct[2]) ]
 
 class Significator(threading.Thread):

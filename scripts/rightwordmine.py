@@ -81,7 +81,6 @@ def main():
     result = []
     qcounters = []
     bcounters = []
-
     for wfile, wargs in wordFileArgs.items():
         qset = makeFormatSafeIntervalReader( queryFile )
         wset = makeFormatSafeIntervalReader( wfile )
@@ -99,16 +98,20 @@ def main():
     
     qsize = countvalidlines(queryFile)
     if (options.background != None):
-		bsize = countvalidlines(options.background)
+        bsize = countvalidlines(options.background)
     
 
     if ( options.background == None ):
-        for counter in qcounters:
-            for items in counter.getWords():
+        for idx in range(0,len(qcounters)):
+            qcounters[idx].join()
+            wfilename = wordFileArgs.keys()[idx]
+            for items in qcounters[idx].getWords():
                 print wfilename + "\t" + "\t".join(items)
     else:
         sigcounters = []
-        for idx in range(0,len(qcounters)):
+        for idx in range(0,len(bcounters)):
+            qcounters[idx].join()
+            bcounters[idx].join()
             sigcounters.append(threading.Thread(target=printsignificancescores, args=tuple([qcounters[idx], bcounters[idx], qsize, bsize, wordFileArgs.keys()[idx]])))
             sigcounters[idx].start()
 
