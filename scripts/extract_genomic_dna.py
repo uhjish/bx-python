@@ -4,6 +4,8 @@ usage: %prog $input $out_file1
     -1, --cols=N,N,N,N: Columns for start, end, strand in input file
     -o, --output_format=N: the data type of the output file
     -s, --seq_path=N: the directory containing the chromosome fasta files
+    -l, --left_flank=N: extra bases on the  left
+    -r, --right_flank=N: extra bases on the  right
 """
 import sys, string, os, re
 from bx.cookbook import doc_optparse
@@ -40,15 +42,20 @@ def reverse_complement( s ):
     return "".join( reversed_s )
 
 def __main__():
+
+    lflank = 0
+    rflank = 0
+
     options, args = doc_optparse.parse( __doc__ )
     try:
         chrom_col, start_col, end_col, strand_col = parse_cols_arg( options.cols )
         output_format = options.output_format
         seq_path = options.seq_path
+        if ( options.left_flank): lflank = int(options.left_flank)
+        if ( options.right_flank): rflank = int( options.right_flank)
         input_filename, output_filename = args
     except:
         doc_optparse.exception()
-
     includes_strand_col = strand_col >= 0
     strand = None
     nibs = {}
@@ -64,6 +71,7 @@ def __main__():
     warnings = []
     warning = ''
     twobitfile = None
+    dbkey=seq_path
      
     for i, line in enumerate( open( input_filename ) ):
         line = line.rstrip( '\r\n' )
@@ -71,8 +79,10 @@ def __main__():
             fields = line.split( '\t' )
             try:
                 chrom = fields[chrom_col]
-                start = int( fields[start_col] )
-                end = int( fields[end_col] )
+                ostart = int( fields[start_col] )
+                oend = int( fields[end_col] )
+                start = ostart - lflank
+                end = oend + rflank
                 if includes_strand_col:
                     strand = fields[strand_col]
             except:
@@ -146,7 +156,7 @@ def __main__():
             if output_format == "fasta" :
                 l = len( sequence )        
                 c = 0
-                fields = [dbkey, str( chrom ), str( start ), str( end ), strand]
+                fields = [dbkey, str( chrom ), str( ostart ), str( oend ), strand]
                 meta_data = "_".join( fields )
                 fout.write( ">%s\n" % meta_data )
                 while c < l:
