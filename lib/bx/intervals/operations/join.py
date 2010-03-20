@@ -12,19 +12,27 @@ import traceback
 import fileinput
 from warnings import warn
 
+
+from types import ListType
+
 from bx.intervals.io import *
 from bx.intervals.operations import *
 from quicksect import IntervalTree
 
-def join(leftSet, rightSet, mincols=1, leftfill=True, rightfill=True):
+
+def join(leftSet, rightSet, mincols=1, leftfill=True, rightfill=True, asfraction=False, matchStrand=STRAND_NEUTRAL, outColumns=[-1,-1]):
     # Read rightSet into memory:
     rightlen = 0
     leftlen = 0
+    rightStrandCol = -1
+    minoverlap = mincols
     rightTree = IntervalTree()
+    
     for item in rightSet:
         if type( item ) is GenomicInterval:
             rightTree.insert( item, rightSet.linenum, item.fields )
             if rightlen == 0: rightlen = item.nfields
+            if rightStrandCol == -1: rightStrandCol = item.strand_col
 
     for interval in leftSet:
         if leftlen == 0 and type( interval ) is GenomicInterval:
@@ -35,7 +43,15 @@ def join(leftSet, rightSet, mincols=1, leftfill=True, rightfill=True):
             result = []
             rightTree.intersect( interval, lambda node: result.append( node ) )
             overlap_not_met = 0
+            leftbases = interval.end - interval.start
             for item in result:
+                rightbases = item.end - item.start
+                if (asfraction==True):
+                    if rightbases < leftbases:
+                        mincols = rightbases
+                    else:
+                        mincols = leftbases
+                    mincols = math.floor(mincols * minoverlap)
                 if item.start in range(interval.start,interval.end+1) and item.end not in range(interval.start,interval.end+1):
                     overlap = interval.end-item.start
                 elif item.end in range(interval.start,interval.end+1) and item.start not in range(interval.start,interval.end+1):
@@ -47,15 +63,26 @@ def join(leftSet, rightSet, mincols=1, leftfill=True, rightfill=True):
                 if overlap < mincols:
                     overlap_not_met += 1
                     continue
-                outfields = list(interval)
-                map(outfields.append, item.other)
+                else:
+                    #check strand
+                    strandMatched = STRAND_INTEGER_VALUES[interval.strand] * STRAND_INTEGER_VALUES[item.other[rightStrandCol]]
+                    if (strandMatched == -1 and matchStrand > 0):
+                        #needed match but found a complement
+                        overlap_not_met += 1
+                        continue
+                    if (strandMatched == 1 and matchStrand < 0):
+                        #needed complement but found a match
+                        overlap_not_met += 1
+                        continue
+                    if (strandMatched == 0 and (matchStrand < -1 or matchStrand > 1)):
+                        #strict criteria but only permissive match found
+                        overlap_not_met += 1
+                        continue
+                #strand criteria met
                 setattr( item, "visited", True )
-                yield outfields
+                yield(getSelectedColumns( interval.fields, item.other, outColumns ))
             if (len(result) == 0 or overlap_not_met == len(result)) and rightfill:
-                outfields = list(interval)
-                for x in range(rightlen): outfields.append(".")
-                yield outfields
-
+                yield(getSelectedColumns( interval.fields, rightlen, outColumns ))
     if leftfill:
         def report_unvisited( node, results ):
             if not hasattr(node, "visited"):
@@ -63,11 +90,40 @@ def join(leftSet, rightSet, mincols=1, leftfill=True, rightfill=True):
         results = []
         rightTree.traverse( lambda x: report_unvisited( x, results ) )
         for item in results:
-            outfields = list()
-            for x in range(leftlen): outfields.append(".")
-            map(outfields.append, item.other)
-            yield outfields
+            yield(getSelectedColumns( leftlen, item.other, outColumns))
 
+
+def getSelectedColumns( left, right, fields=[-1,-1] ):
+    #left is a list or the length of the missing list
+    #right is a list or the length of the missing list
+    #fields tell me which columns to show you -- -1,-1 means all from both
+    outfields = list()    
+    try:
+        leftLen=len(left)
+        if (fields[1]==-1):
+            map(outfields.append,list(left))
+        else:
+            outfields.append(left[fields[0]])
+    except TypeError:
+        leftLen=left
+        if (fields[0]==-1):
+            for x in range(leftLen): outfields.append(".")
+        else:
+            outfields.append(".")
+    try:
+        rightLen=len(right)
+        if (fields[1]==-1):
+            map(outfields.append,list(right))
+        else:
+            outfields.append(right[fields[1]])
+    except TypeError:
+        rightLen=right
+        if (fields[1]==-1):
+            for x in range(rightLen): outfields.append(".")
+        else:
+            outfields.append(".")
+    
+    return(outfields)
 
 def interval_cmp(a, b):
     interval1 = a[0]

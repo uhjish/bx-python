@@ -62,7 +62,7 @@ class GenomicInterval( TableRow ):
             self.strand = default_strand
         else:
             strand = fields[strand_col]
-            if strand not in ( "+", "-"):
+            if strand not in ( "+", "-", "."):
                 if fix_strand:
                     strand = "+"
                 else: raise StrandFormatError( "Strand must be either '+' or '-'" )
@@ -112,7 +112,7 @@ class GenomicIntervalReader( TableReader ):
     >>> assert type( elements[4] ) is GenomicInterval
     """
     def __init__( self, input, chrom_col=0, start_col=1, end_col=2, strand_col=5, 
-                  default_strand="+", return_header=True, return_comments=True, force_header=None, fix_strand=False, comment_lines_startswith = ["#", "track "] ):
+                  default_strand=".", return_header=True, return_comments=True, force_header=None, fix_strand=False, comment_lines_startswith = ["#", "track "] ):
         TableReader.__init__( self, input, return_header, return_comments, force_header, comment_lines_startswith )
         self.chrom_col = chrom_col
         self.start_col = start_col
