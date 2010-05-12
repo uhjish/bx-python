@@ -152,6 +152,7 @@ def __main__():
                 continue
             if includes_strand_col and strand == "-":
                 sequence = reverse_complement( sequence )
+            sequence = sequence[0:lflank].lower() + sequence[lflank:len(sequence)-rflank+1].upper() + sequence[len(sequence)-rflank+1:len(sequence)].lower()
 
             if output_format == "fasta" :
                 l = len( sequence )        
