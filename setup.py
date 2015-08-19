@@ -1,11 +1,11 @@
 import sys, platform
 
-if sys.version_info < (2, 4):
+if sys.version_info[0] < 2 or sys.version_info[1] < 4:
     print >> sys.stderr, "ERROR: bx-python requires python 2.4 or greater"
     sys.exit()
 
 # Automatically download setuptools if not available
-from distribute_setup import use_setuptools
+from ez_setup import use_setuptools
 use_setuptools()
 
 from setuptools import *
@@ -19,7 +19,7 @@ except:
        
 def main():
     setup(  name = "bx-python",
-            version = "0.7.2",
+            version = "0.5.0.1",
             py_modules = [ 'psyco_full' ],
             packages = find_packages( 'lib' ),
             package_dir = { '': 'lib' },
@@ -28,21 +28,10 @@ def main():
             ext_modules = get_extension_modules(),
             test_suite = 'nose.collector',
             setup_requires = ['nose>=0.10.4'],
-            author = "James Taylor, Bob Harris, David King, Brent Pedersen, Kanwei Li, and others",
+            author = "Ajish George, based on bx-python by James Taylor, Bob Harris, David King, Brent Pedersen, and others",
             author_email = "james@jamestaylor.org",
             description = "Tools for manipulating biological data, particularly multiple sequence alignments",
-            url = "http://bitbucket.org/james_taylor/bx-python/wiki/Home",
-            license = "MIT",
-            classifiers = [
-                "Development Status :: 5 - Production/Stable",
-                "Intended Audience :: Developers",
-                "Intended Audience :: Science/Research",
-                "License :: OSI Approved :: MIT License",
-                "Operating System :: POSIX",
-                "Programming Language :: Python :: 2",
-                "Topic :: Scientific/Engineering :: Bio-Informatics",
-                "Topic :: Software Development :: Libraries :: Python Modules"
-            ],
+            url = "http://bx-python.trac.bx.psu.edu",
             zip_safe = False,
             dependency_links = [],
             cmdclass=command_classes )
@@ -60,15 +49,6 @@ try:
     command_classes['build_ext'] = Cython.Distutils.build_ext
 except:
     pass
-
-# Run 2to3 builder if we're on Python 3.x, from
-#   http://wiki.python.org/moin/PortingPythonToPy3k
-try:
-    from distutils.command.build_py import build_py_2to3 as build_py
-except ImportError:
-    # 2.x
-    from distutils.command.build_py import build_py
-command_classes['build_py'] = build_py
 
 # Use epydoc if found
 try:
@@ -128,12 +108,6 @@ def get_extension_modules():
     extensions.append( Extension( "bx.seq._twobit", [ "lib/bx/seq/_twobit.pyx" ] ) )
     # Translation if character / integer strings 
     extensions.append( Extension( "bx._seqmapping", [ "lib/bx/_seqmapping.pyx" ] ) )
-    # BGZF
-    extensions.append( Extension( "bx.misc.bgzf",
-                                  [ "lib/bx/misc/bgzf.pyx", "src/samtools/bgzf.c" ],
-                                  include_dirs=[ "src/samtools"],
-                                  libraries=['z'] ) )
-
     
     # The following extensions won't (currently) compile on windows
     if platform.system() not in ( 'Microsoft', 'Windows' ):
@@ -154,20 +128,12 @@ def get_extension_modules():
             
             # Sparse arrays with summaries organized as trees on disk
             extensions.append( Extension( "bx.arrays.array_tree", [ "lib/bx/arrays/array_tree.pyx" ], include_dirs=[numpy.get_include()] ) )  
-        
-            # Reading UCSC "big binary index" files
-            extensions.append( Extension( "bx.bbi.bpt_file", [ "lib/bx/bbi/bpt_file.pyx" ] ) )
-            extensions.append( Extension( "bx.bbi.cirtree_file", [ "lib/bx/bbi/cirtree_file.pyx" ] ) )
-            extensions.append( Extension( "bx.bbi.bbi_file", [ "lib/bx/bbi/bbi_file.pyx" ], include_dirs=[numpy.get_include()] ) )
-            extensions.append( Extension( "bx.bbi.bigwig_file", [ "lib/bx/bbi/bigwig_file.pyx" ], include_dirs=[numpy.get_include()] ) )
-            extensions.append( Extension( "bx.bbi.bigbed_file", [ "lib/bx/bbi/bigbed_file.pyx" ], include_dirs=[numpy.get_include()] ) )
-            # EPO and Chain arithmetics and IO speedups
-            extensions.append( Extension( "bx.align._epo", [ "lib/bx/align/_epo.pyx" ], include_dirs=[numpy.get_include()] ) )
 
-        # Reading UCSC bed and wiggle formats
+        # Reading UCSC wiggle format
         extensions.append( Extension( "bx.arrays.bed", [ "lib/bx/arrays/bed.pyx" ] ) )
-        extensions.append( Extension( "bx.arrays.wiggle", [ "lib/bx/arrays/wiggle.pyx" ] ) )
 
+        # Reading UCSC wiggle format
+        extensions.append( Extension( "bx.arrays.wiggle", [ "lib/bx/arrays/wiggle.pyx" ] ) )
 
         # CpG masking
         extensions.append( Extension( "bx.align.sitemask._cpg", \

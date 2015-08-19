@@ -16,6 +16,16 @@ def fail( msg ):
 BED_DEFAULT_COLS = 0, 1, 2, 5
 MAX_END = 512*1024*1024
 
+#Constants to support strand specific and fractional intersection
+#Strand constants
+STRAND_MATCH_STRICT = 2
+STRAND_MATCH_PERMISSIVE = 1
+STRAND_NEUTRAL = 0
+STRAND_COMPLEMENT_PERMISSIVE = -1
+STRAND_COMPLEMENT_STRICT = -2
+STRAND_INTEGER_VALUES = {'-':-1,'.':0,'+':1}
+
+
 def bits_set_in_range( bits, range_start, range_end ):
     """
     Yield start,end tuples for each span of set bits in [range_start,range_end)
