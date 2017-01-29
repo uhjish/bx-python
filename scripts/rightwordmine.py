@@ -8,7 +8,6 @@ usage: %prog [options] queryFile wordFile1 wordFile2 wordFile3...
 
 from __future__ import division
 
-import psyco_full
 
 import string
 import sys
